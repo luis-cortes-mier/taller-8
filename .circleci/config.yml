@@ -7,14 +7,6 @@ defaults: &defaults
     - image: cimg/python:3.10
   working_directory: ~/project
 
-prepare_venv: &prepare_venv
-  run:
-    name: Create venv
-    command: |
-      python -m venv venv
-      source venv/bin/activate
-      pip install --upgrade pip
-
 jobs:
   deploy_app_to_railway:
     <<: *defaults
@@ -23,22 +15,23 @@ jobs:
           path: ~/project/
       - node/install:
           node-version: '20.9'
-      - run: node --version 
+      - run: node --version
       - run: npm i -g @railway/cli
       - run:
-          name: Deploy to Railway App
+          name: Deploy to Railway (CI, no interactivo)
           command: |
             cd bankchurn-api
-            railway up --service=taller8
-            railway up --detach
+            # Verificación: el token debe venir del entorno de CircleCI
+            if [ -z "$RAILWAY_TOKEN" ]; then
+              echo "RAILWAY_TOKEN no está definido en CircleCI"; exit 1;
+            fi
 
-
-tags_only: &tags_only
-  filters:
-    branches:
-      ignore: /.*/
-    tags:
-      only: /^.*/
+            railway up \
+              --project "exquisite-transformation" \
+              --service "acceptable-dedication" \
+              --environment "production" \
+              --ci \
+              --detach
 
 workflows:
   version: 1
