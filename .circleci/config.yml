@@ -17,19 +17,21 @@ jobs:
           node-version: '20.9'
       - run: node --version
       - run: npm i -g @railway/cli
+      - run: railway --version
       - run:
           name: Deploy to Railway (CI, no interactivo)
           command: |
+            set -euo pipefail
             cd bankchurn-api
-            # Verificación: el token debe venir del entorno de CircleCI
-            if [ -z "$RAILWAY_TOKEN" ]; then
-              echo "RAILWAY_TOKEN no está definido en CircleCI"; exit 1;
-            fi
 
+            # Validaciones (fallan si falta algo)
+            : "${RAILWAY_TOKEN:?RAILWAY_TOKEN no definido}"
+            : "${RAILWAY_PROJECT_ID:?RAILWAY_PROJECT_ID no definido}"
+            : "${RAILWAY_ENVIRONMENT:?RAILWAY_ENVIRONMENT no definido}"
+
+            # Despliegue no interactivo usando variables de entorno
             railway up \
-              --project "exquisite-transformation" \
-              --service "acceptable-dedication" \
-              --environment "production" \
+              --service "${RAILWAY_SERVICE:-acceptable-dedication}" \
               --ci \
               --detach
 
@@ -42,3 +44,4 @@ workflows:
             branches:
               only:
                 - main
+
